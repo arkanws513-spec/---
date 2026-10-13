@@ -23,6 +23,20 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Validate inline game JavaScript syntax
+        run: |
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const html = fs.readFileSync('index.html', 'utf8');
+          const scripts = [...html.matchAll(/<script\\b[^>]*>([\\s\\S]*?)<\\/script>/gi)]
+            .map(match => match[1])
+            .filter(script => script.trim());
+          if (!scripts.length) throw new Error('No inline game script found');
+          scripts.forEach((script, index) => {
+            new Function(script);
+            console.log(`Inline script ${index + 1}: syntax OK`);
+          });
+          NODE
       - name: Configure Pages
         uses: actions/configure-pages@v5
         with:
